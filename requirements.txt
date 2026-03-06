@@ -1,5 +1,5 @@
-# Kafka
-confluent-kafka>=2.6.0
+# Kafka + Schema Registry
+confluent-kafka[avro]>=2.6.0
 
 # Data
 ccxt>=4.4.0

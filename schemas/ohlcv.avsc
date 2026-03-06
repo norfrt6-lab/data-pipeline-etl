@@ -1,0 +1,18 @@
+{
+  "type": "record",
+  "name": "OhlcvCandle",
+  "namespace": "com.crypto.pipeline",
+  "doc": "A single OHLCV candle from an exchange",
+  "fields": [
+    {"name": "symbol", "type": "string", "doc": "Trading pair (e.g., BTC/USDT)"},
+    {"name": "exchange", "type": "string", "doc": "Exchange identifier (e.g., binance)"},
+    {"name": "timeframe", "type": "string", "doc": "Candle timeframe (e.g., 1m, 1h, 1d)"},
+    {"name": "timestamp_ms", "type": "long", "doc": "Candle open time in milliseconds since epoch"},
+    {"name": "open", "type": "double", "doc": "Open price"},
+    {"name": "high", "type": "double", "doc": "High price"},
+    {"name": "low", "type": "double", "doc": "Low price"},
+    {"name": "close", "type": "double", "doc": "Close price"},
+    {"name": "volume", "type": "double", "doc": "Trading volume"},
+    {"name": "fetched_at", "type": "string", "doc": "ISO 8601 timestamp when the candle was fetched"}
+  ]
+}

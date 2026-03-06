@@ -18,7 +18,10 @@ known-first-party = ["src"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
-addopts = "-v --tb=short"
+addopts = "-v --tb=short -m 'not integration'"
+markers = [
+    "integration: marks tests that require Docker (deselect with '-m \"not integration\"')",
+]
 
 [tool.mypy]
 python_version = "3.10"
