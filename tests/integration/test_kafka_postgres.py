@@ -9,6 +9,7 @@ These tests spin up real containers to verify the end-to-end flow:
 from __future__ import annotations
 
 import json
+from urllib.parse import urlparse
 
 import psycopg2
 import pytest
@@ -18,11 +19,23 @@ from testcontainers.kafka import KafkaContainer
 from testcontainers.postgres import PostgresContainer
 
 
+def _pg_connect(url: str) -> psycopg2.extensions.connection:
+    """Connect to PostgreSQL from a testcontainers URL."""
+    parsed = urlparse(url)
+    return psycopg2.connect(
+        host=parsed.hostname,
+        port=parsed.port,
+        dbname=parsed.path.lstrip("/"),
+        user=parsed.username,
+        password=parsed.password,
+    )
+
+
 @pytest.fixture(scope="module")
 def postgres_container():
     """Start a PostgreSQL container for integration tests."""
     with PostgresContainer("postgres:16-alpine") as pg:
-        conn = psycopg2.connect(pg.get_connection_url())
+        conn = _pg_connect(pg.get_connection_url())
         conn.autocommit = True
         with conn.cursor() as cur:
             cur.execute("""
@@ -116,8 +129,7 @@ class TestPostgresInsert:
     """Test inserting candle data into PostgreSQL."""
 
     def test_batch_insert(self, postgres_container):
-        conn_url = postgres_container.get_connection_url()
-        conn = psycopg2.connect(conn_url)
+        conn = _pg_connect(postgres_container.get_connection_url())
         conn.autocommit = False
 
         candles = [_make_candle(ts_ms=1700000000000 + i * 60000) for i in range(10)]
@@ -142,8 +154,7 @@ class TestPostgresInsert:
         conn.close()
 
     def test_upsert_deduplication(self, postgres_container):
-        conn_url = postgres_container.get_connection_url()
-        conn = psycopg2.connect(conn_url)
+        conn = _pg_connect(postgres_container.get_connection_url())
         conn.autocommit = False
 
         # Insert same candle twice — should not duplicate
@@ -197,7 +208,7 @@ class TestEndToEnd:
         )
         consumer.subscribe([topic])
 
-        conn = psycopg2.connect(conn_url)
+        conn = _pg_connect(conn_url)
         conn.autocommit = False
         consumed = []
 
