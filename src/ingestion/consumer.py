@@ -9,14 +9,13 @@ from __future__ import annotations
 
 import signal
 import time
-from datetime import datetime, timezone
 
 import psycopg2
 import psycopg2.extras
 import structlog
 from confluent_kafka import Consumer, KafkaError, KafkaException, Producer
 
-from src.config import KafkaSettings, PostgresSettings, get_settings
+from src.config import KafkaSettings, PostgresSettings, Settings, get_settings
 from src.ingestion.serialization import create_deserializer
 
 logger = structlog.get_logger(__name__)
