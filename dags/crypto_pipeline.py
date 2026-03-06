@@ -11,6 +11,7 @@ from datetime import datetime, timedelta
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 from airflow.operators.bash import BashOperator
+from airflow.providers.apache.spark.operators.spark_submit import SparkSubmitOperator
 from airflow.utils.task_group import TaskGroup
 
 default_args = {
@@ -161,14 +162,32 @@ with DAG(
 
     # ─── Spark Transformations ───────────────────────────
     with TaskGroup("transformation") as transform_group:
-        aggregate = BashOperator(
+        aggregate = SparkSubmitOperator(
             task_id="spark_aggregate",
-            bash_command="spark-submit --master local[*] /opt/airflow/src/transformation/ohlcv_aggregator.py",
+            application="/opt/airflow/src/transformation/ohlcv_aggregator.py",
+            conn_id="spark_default",
+            jars="/opt/airflow/jars/postgresql-42.7.1.jar",
+            driver_memory="1g",
+            executor_memory="2g",
+            conf={
+                "spark.sql.shuffle.partitions": "8",
+                "spark.serializer": "org.apache.spark.serializer.KryoSerializer",
+            },
+            verbose=False,
         )
 
-        indicators = BashOperator(
+        indicators = SparkSubmitOperator(
             task_id="spark_indicators",
-            bash_command="spark-submit --master local[*] /opt/airflow/src/transformation/indicator_calculator.py",
+            application="/opt/airflow/src/transformation/indicator_calculator.py",
+            conn_id="spark_default",
+            jars="/opt/airflow/jars/postgresql-42.7.1.jar",
+            driver_memory="1g",
+            executor_memory="2g",
+            conf={
+                "spark.sql.shuffle.partitions": "8",
+                "spark.serializer": "org.apache.spark.serializer.KryoSerializer",
+            },
+            verbose=False,
         )
 
         aggregate >> indicators

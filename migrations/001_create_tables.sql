@@ -1,6 +1,7 @@
 -- Raw staging table: Kafka consumer writes here
+-- Partitioned by ingested_at (monthly) for efficient time-range queries and retention
 CREATE TABLE IF NOT EXISTS raw_ohlcv (
-    id              BIGSERIAL PRIMARY KEY,
+    id              BIGSERIAL       NOT NULL,
     symbol          VARCHAR(20)      NOT NULL,
     exchange        VARCHAR(30)      NOT NULL,
     timestamp_ms    BIGINT           NOT NULL,
@@ -10,15 +11,40 @@ CREATE TABLE IF NOT EXISTS raw_ohlcv (
     close           DOUBLE PRECISION NOT NULL,
     volume          DOUBLE PRECISION NOT NULL,
     ingested_at     TIMESTAMPTZ      NOT NULL DEFAULT NOW(),
-    UNIQUE (symbol, exchange, timestamp_ms)
-);
+    PRIMARY KEY (id, ingested_at),
+    UNIQUE (symbol, exchange, timestamp_ms, ingested_at)
+) PARTITION BY RANGE (ingested_at);
+
+-- Create initial partitions (auto-create more via pg_partman or cron)
+CREATE TABLE IF NOT EXISTS raw_ohlcv_2024_q1 PARTITION OF raw_ohlcv
+    FOR VALUES FROM ('2024-01-01') TO ('2024-04-01');
+CREATE TABLE IF NOT EXISTS raw_ohlcv_2024_q2 PARTITION OF raw_ohlcv
+    FOR VALUES FROM ('2024-04-01') TO ('2024-07-01');
+CREATE TABLE IF NOT EXISTS raw_ohlcv_2024_q3 PARTITION OF raw_ohlcv
+    FOR VALUES FROM ('2024-07-01') TO ('2024-10-01');
+CREATE TABLE IF NOT EXISTS raw_ohlcv_2024_q4 PARTITION OF raw_ohlcv
+    FOR VALUES FROM ('2024-10-01') TO ('2025-01-01');
+CREATE TABLE IF NOT EXISTS raw_ohlcv_2025_q1 PARTITION OF raw_ohlcv
+    FOR VALUES FROM ('2025-01-01') TO ('2025-04-01');
+CREATE TABLE IF NOT EXISTS raw_ohlcv_2025_q2 PARTITION OF raw_ohlcv
+    FOR VALUES FROM ('2025-04-01') TO ('2025-07-01');
+CREATE TABLE IF NOT EXISTS raw_ohlcv_2025_q3 PARTITION OF raw_ohlcv
+    FOR VALUES FROM ('2025-07-01') TO ('2025-10-01');
+CREATE TABLE IF NOT EXISTS raw_ohlcv_2025_q4 PARTITION OF raw_ohlcv
+    FOR VALUES FROM ('2025-10-01') TO ('2026-01-01');
+CREATE TABLE IF NOT EXISTS raw_ohlcv_2026_q1 PARTITION OF raw_ohlcv
+    FOR VALUES FROM ('2026-01-01') TO ('2026-04-01');
+CREATE TABLE IF NOT EXISTS raw_ohlcv_2026_q2 PARTITION OF raw_ohlcv
+    FOR VALUES FROM ('2026-04-01') TO ('2026-07-01');
+CREATE TABLE IF NOT EXISTS raw_ohlcv_default PARTITION OF raw_ohlcv DEFAULT;
 
 CREATE INDEX IF NOT EXISTS idx_raw_ohlcv_symbol_ts
     ON raw_ohlcv (symbol, timestamp_ms DESC);
 
 -- Hourly aggregated OHLCV: Spark writes here
+-- Partitioned by hour_start (monthly) for efficient aggregation queries
 CREATE TABLE IF NOT EXISTS ohlcv_hourly (
-    id              BIGSERIAL PRIMARY KEY,
+    id              BIGSERIAL       NOT NULL,
     symbol          VARCHAR(20)      NOT NULL,
     exchange        VARCHAR(30)      NOT NULL,
     hour_start      TIMESTAMPTZ      NOT NULL,
@@ -30,8 +56,21 @@ CREATE TABLE IF NOT EXISTS ohlcv_hourly (
     trade_count     INTEGER          NOT NULL DEFAULT 0,
     vwap            DOUBLE PRECISION,
     created_at      TIMESTAMPTZ      NOT NULL DEFAULT NOW(),
+    PRIMARY KEY (id, hour_start),
     UNIQUE (symbol, exchange, hour_start)
-);
+) PARTITION BY RANGE (hour_start);
+
+CREATE TABLE IF NOT EXISTS ohlcv_hourly_2024_h1 PARTITION OF ohlcv_hourly
+    FOR VALUES FROM ('2024-01-01') TO ('2024-07-01');
+CREATE TABLE IF NOT EXISTS ohlcv_hourly_2024_h2 PARTITION OF ohlcv_hourly
+    FOR VALUES FROM ('2024-07-01') TO ('2025-01-01');
+CREATE TABLE IF NOT EXISTS ohlcv_hourly_2025_h1 PARTITION OF ohlcv_hourly
+    FOR VALUES FROM ('2025-01-01') TO ('2025-07-01');
+CREATE TABLE IF NOT EXISTS ohlcv_hourly_2025_h2 PARTITION OF ohlcv_hourly
+    FOR VALUES FROM ('2025-07-01') TO ('2026-01-01');
+CREATE TABLE IF NOT EXISTS ohlcv_hourly_2026_h1 PARTITION OF ohlcv_hourly
+    FOR VALUES FROM ('2026-01-01') TO ('2026-07-01');
+CREATE TABLE IF NOT EXISTS ohlcv_hourly_default PARTITION OF ohlcv_hourly DEFAULT;
 
 -- Daily aggregated OHLCV: Spark writes here
 CREATE TABLE IF NOT EXISTS ohlcv_daily (

@@ -1,0 +1,162 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "palette-classic" }, "thresholds": { "steps": [{ "color": "green", "value": null }, { "color": "red", "value": 1000 }] } },
+        "overrides": []
+      },
+      "gridPos": { "h": 6, "w": 8, "x": 0, "y": 0 },
+      "id": 1,
+      "options": { "colorMode": "value", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
+      "title": "Kafka Messages / sec",
+      "type": "stat",
+      "targets": [
+        { "expr": "rate(kafka_topic_partition_current_offset{topic=\"crypto.ohlcv.raw\"}[5m])", "legendFormat": "{{partition}}", "refId": "A" }
+      ]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "palette-classic" }, "thresholds": { "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 100 }, { "color": "red", "value": 500 }] } },
+        "overrides": []
+      },
+      "gridPos": { "h": 6, "w": 8, "x": 8, "y": 0 },
+      "id": 2,
+      "options": { "colorMode": "value", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
+      "title": "Consumer Lag",
+      "type": "stat",
+      "targets": [
+        { "expr": "kafka_consumergroup_lag{consumergroup=\"etl-consumer-group\",topic=\"crypto.ohlcv.raw\"}", "legendFormat": "partition-{{partition}}", "refId": "A" }
+      ]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "palette-classic" }, "thresholds": { "steps": [{ "color": "green", "value": null }] } },
+        "overrides": []
+      },
+      "gridPos": { "h": 6, "w": 8, "x": 16, "y": 0 },
+      "id": 3,
+      "options": { "colorMode": "value", "graphMode": "none", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
+      "title": "DLQ Messages",
+      "type": "stat",
+      "targets": [
+        { "expr": "kafka_topic_partition_current_offset{topic=\"crypto.ohlcv.dlq\"}", "legendFormat": "DLQ", "refId": "A" }
+      ]
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "postgres" },
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "palette-classic" } },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 6 },
+      "id": 4,
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "single" } },
+      "title": "Raw OHLCV Ingestion Rate (rows/hour)",
+      "type": "timeseries",
+      "targets": [
+        {
+          "rawSql": "SELECT date_trunc('hour', ingested_at) AS time, COUNT(*) AS rows_ingested FROM raw_ohlcv WHERE ingested_at > NOW() - INTERVAL '24 hours' GROUP BY 1 ORDER BY 1",
+          "format": "time_series",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "postgres" },
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "palette-classic" } },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 6 },
+      "id": 5,
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "single" } },
+      "title": "BTC/USDT Close Price (Daily)",
+      "type": "timeseries",
+      "targets": [
+        {
+          "rawSql": "SELECT date AS time, close FROM ohlcv_daily WHERE symbol = 'BTC/USDT' ORDER BY date DESC LIMIT 90",
+          "format": "time_series",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "postgres" },
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "palette-classic" } },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 14 },
+      "id": 6,
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "title": "Technical Indicators (SMA / EMA)",
+      "type": "timeseries",
+      "targets": [
+        {
+          "rawSql": "SELECT date AS time, sma_7, sma_25, ema_12, ema_26 FROM technical_indicators WHERE symbol = 'BTC/USDT' ORDER BY date DESC LIMIT 90",
+          "format": "time_series",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "postgres" },
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "palette-classic" } },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 14 },
+      "id": 7,
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "single" } },
+      "title": "RSI-14",
+      "type": "timeseries",
+      "targets": [
+        {
+          "rawSql": "SELECT date AS time, rsi_14 FROM technical_indicators WHERE symbol = 'BTC/USDT' ORDER BY date DESC LIMIT 90",
+          "format": "time_series",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "postgres" },
+      "fieldConfig": {
+        "defaults": { "thresholds": { "steps": [{ "color": "red", "value": null }, { "color": "green", "value": 1 }] } },
+        "overrides": []
+      },
+      "gridPos": { "h": 6, "w": 24, "x": 0, "y": 22 },
+      "id": 8,
+      "options": { "colorMode": "background", "graphMode": "none", "justifyMode": "auto", "orientation": "horizontal", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
+      "title": "Pipeline Run Status",
+      "type": "stat",
+      "targets": [
+        {
+          "rawSql": "SELECT started_at AS time, CASE status WHEN 'success' THEN 1 WHEN 'running' THEN 0.5 ELSE 0 END AS status FROM pipeline_runs ORDER BY started_at DESC LIMIT 10",
+          "format": "time_series",
+          "refId": "A"
+        }
+      ]
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "style": "dark",
+  "tags": ["crypto", "etl", "pipeline"],
+  "templating": { "list": [] },
+  "time": { "from": "now-24h", "to": "now" },
+  "timepicker": {},
+  "timezone": "utc",
+  "title": "Crypto ETL Pipeline Overview",
+  "uid": "crypto-etl-overview",
+  "version": 1
+}
