@@ -40,20 +40,33 @@ def daily_df(spark):
     for i in range(30):
         d = date(2024, 1, 1) + timedelta(days=i)
         price = base_price + i * 100  # Steady uptrend
-        data.append((
-            "BTC/USDT",
-            "binance",
-            d,
-            price,
-            price + 200,
-            price - 100,
-            price + 50,
-            1000.0 + i * 10,
-            1,
-            price + 25,
-        ))
+        data.append(
+            (
+                "BTC/USDT",
+                "binance",
+                d,
+                price,
+                price + 200,
+                price - 100,
+                price + 50,
+                1000.0 + i * 10,
+                1,
+                price + 25,
+            )
+        )
 
-    columns = ["symbol", "exchange", "date", "open", "high", "low", "close", "volume", "trade_count", "vwap"]
+    columns = [
+        "symbol",
+        "exchange",
+        "date",
+        "open",
+        "high",
+        "low",
+        "close",
+        "volume",
+        "trade_count",
+        "vwap",
+    ]
     return spark.createDataFrame(data, columns)
 
 
@@ -122,10 +135,22 @@ class TestComputeAllIndicators:
     def test_all_columns_present(self, daily_df):
         result = compute_all_indicators(daily_df)
         expected = {
-            "symbol", "date", "sma_7", "sma_25", "sma_99",
-            "ema_12", "ema_26", "rsi_14", "macd", "macd_signal",
-            "macd_histogram", "bb_upper", "bb_middle", "bb_lower",
-            "atr_14", "obv",
+            "symbol",
+            "date",
+            "sma_7",
+            "sma_25",
+            "sma_99",
+            "ema_12",
+            "ema_26",
+            "rsi_14",
+            "macd",
+            "macd_signal",
+            "macd_histogram",
+            "bb_upper",
+            "bb_middle",
+            "bb_lower",
+            "atr_14",
+            "obv",
         }
         assert expected.issubset(set(result.columns))
 

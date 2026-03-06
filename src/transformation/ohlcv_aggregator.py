@@ -51,9 +51,7 @@ def aggregate_hourly(df: DataFrame) -> DataFrame:
 
     # Window for first/last within each hour
     w_asc = Window.partitionBy("symbol", "exchange", "hour_start").orderBy("timestamp_ms")
-    w_desc = Window.partitionBy("symbol", "exchange", "hour_start").orderBy(
-        F.desc("timestamp_ms")
-    )
+    w_desc = Window.partitionBy("symbol", "exchange", "hour_start").orderBy(F.desc("timestamp_ms"))
 
     df_ranked = df_with_hour.withColumn("rn_first", F.row_number().over(w_asc)).withColumn(
         "rn_last", F.row_number().over(w_desc)
@@ -80,9 +78,7 @@ def aggregate_hourly(df: DataFrame) -> DataFrame:
         )
         .withColumn(
             "vwap",
-            F.when(F.col("_vwap_den") > 0, F.col("_vwap_num") / F.col("_vwap_den")).otherwise(
-                None
-            ),
+            F.when(F.col("_vwap_den") > 0, F.col("_vwap_num") / F.col("_vwap_den")).otherwise(None),
         )
         .drop("_vwap_num", "_vwap_den")
     )
@@ -141,9 +137,7 @@ def aggregate_daily(df: DataFrame) -> DataFrame:
         )
         .withColumn(
             "vwap",
-            F.when(F.col("_vwap_den") > 0, F.col("_vwap_num") / F.col("_vwap_den")).otherwise(
-                None
-            ),
+            F.when(F.col("_vwap_den") > 0, F.col("_vwap_num") / F.col("_vwap_den")).otherwise(None),
         )
         .drop("_vwap_num", "_vwap_den")
     )

@@ -108,6 +108,7 @@ def publish_candles(
             value_bytes = serializer.serialize_value(candle, topic)
         else:
             import json
+
             key_bytes = key.encode("utf-8")
             value_bytes = json.dumps(candle).encode("utf-8")
         producer.produce(
@@ -157,7 +158,9 @@ def run(settings: Settings | None = None) -> None:
                     candles = [c for c in candles if c["timestamp_ms"] > last_timestamp]
 
                 if candles:
-                    count = publish_candles(producer, kafka_cfg.topic_raw_ohlcv, candles, serializer)
+                    count = publish_candles(
+                        producer, kafka_cfg.topic_raw_ohlcv, candles, serializer
+                    )
                     last_timestamp = max(c["timestamp_ms"] for c in candles)
                     logger.info(
                         "batch_published",

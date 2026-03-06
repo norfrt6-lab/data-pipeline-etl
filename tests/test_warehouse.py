@@ -19,7 +19,13 @@ class TestGetTableCount:
             get_table_count(None, "some_other_table")
 
     def test_allowed_tables(self):
-        allowed = ["raw_ohlcv", "ohlcv_hourly", "ohlcv_daily", "technical_indicators", "pipeline_runs"]
+        allowed = [
+            "raw_ohlcv",
+            "ohlcv_hourly",
+            "ohlcv_daily",
+            "technical_indicators",
+            "pipeline_runs",
+        ]
         for table in allowed:
             # Should not raise ValueError (will raise other errors without real DB)
             with pytest.raises(Exception):
