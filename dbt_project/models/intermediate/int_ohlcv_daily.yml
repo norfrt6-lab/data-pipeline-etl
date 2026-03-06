@@ -1,0 +1,15 @@
+version: 2
+
+models:
+  - name: int_ohlcv_daily
+    description: "Daily OHLCV aggregation with VWAP and daily returns"
+    columns:
+      - name: symbol
+        tests:
+          - not_null
+      - name: date
+        tests:
+          - not_null
+      - name: volume
+        tests:
+          - not_null
