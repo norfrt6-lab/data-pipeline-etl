@@ -7,7 +7,7 @@ then writes results to the technical_indicators table.
 from __future__ import annotations
 
 import pandas as pd
-from pyspark.sql import SparkSession, DataFrame
+from pyspark.sql import DataFrame, SparkSession
 from pyspark.sql import functions as F
 from pyspark.sql.types import DoubleType, StructField, StructType
 from pyspark.sql.window import Window
