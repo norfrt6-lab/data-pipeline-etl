@@ -2,6 +2,10 @@
 
 Real-time and batch data pipeline for crypto market data. Ingests BTC/USDT OHLCV candles via Kafka, transforms with PySpark, models with dbt, and orchestrates with Apache Airflow.
 
+[![CI](https://github.com/norfrt6-lab/data-pipeline-etl/actions/workflows/ci.yml/badge.svg)](https://github.com/norfrt6-lab/data-pipeline-etl/actions/workflows/ci.yml)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+
 ## Quick Start
 
 ```bash
@@ -75,7 +79,7 @@ data-pipeline-etl/
 │   └── tests/                     # Data quality assertions
 ├── migrations/
 │   └── 001_create_tables.sql      # DDL for all warehouse tables
-├── tests/                         # pytest suite (35+ tests)
+├── tests/                         # pytest suite (86 unit + 4 integration tests)
 ├── docker/
 │   ├── airflow/Dockerfile
 │   └── spark/Dockerfile
@@ -109,6 +113,7 @@ data-pipeline-etl/
 |---|---|---|---|
 | Zookeeper | confluentinc/cp-zookeeper:7.7.1 | 2181 | Kafka coordination |
 | Kafka | confluentinc/cp-kafka:7.7.1 | 9092 | Message broker |
+| Schema Registry | confluentinc/cp-schema-registry:7.7.1 | 8082 | Avro schema management |
 | PostgreSQL | postgres:16-alpine | 5432 | Data warehouse |
 | Redis | redis:7-alpine | 6379 | Airflow Celery backend |
 | Spark Master | bitnami/spark:3.5 | 8080, 7077 | Spark cluster manager |
@@ -116,6 +121,8 @@ data-pipeline-etl/
 | Airflow Webserver | Custom | 8081 | Airflow UI |
 | Airflow Scheduler | Custom | — | DAG scheduling |
 | Airflow Worker | Custom | — | Task execution |
+| Prometheus | prom/prometheus | 9090 | Metrics collection |
+| Grafana | grafana/grafana | 3000 | Dashboards and alerting |
 
 ## Kafka Topics
 
@@ -197,3 +204,14 @@ make typecheck
 **Add a new indicator:** Add a `compute_*` function in `src/transformation/indicator_calculator.py`, call it from `compute_all_indicators()`, and add the column to the `technical_indicators` table migration.
 
 **Add a new dbt model:** Create a `.sql` file in the appropriate layer (`staging/`, `intermediate/`, `marts/`) following existing patterns. Add schema tests in a corresponding `.yml` file.
+
+## Documentation
+
+- [Architecture](docs/ARCHITECTURE.md) — System design, technology choices, data flow
+- [Deployment](docs/DEPLOYMENT.md) — Production setup, scaling, monitoring
+- [Contributing](CONTRIBUTING.md) — Development workflow, code standards
+- [Changelog](CHANGELOG.md) — Version history
+
+## License
+
+[MIT](LICENSE)
