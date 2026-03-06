@@ -9,7 +9,6 @@ These tests spin up real containers to verify the end-to-end flow:
 from __future__ import annotations
 
 import json
-import time
 
 import psycopg2
 import pytest

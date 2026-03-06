@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from contextlib import contextmanager
 from datetime import datetime, timezone
-from typing import Generator
+from collections.abc import Generator
 
 import psycopg2
 import psycopg2.extras

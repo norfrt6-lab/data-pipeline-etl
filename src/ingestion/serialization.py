@@ -7,16 +7,15 @@ Falls back to JSON serialization when schema registry is unavailable.
 from __future__ import annotations
 
 import json
-from typing import Any
 
 import structlog
 from confluent_kafka.schema_registry import SchemaRegistryClient
-from confluent_kafka.schema_registry.avro import AvroSerializer, AvroDeserializer
+from confluent_kafka.schema_registry.avro import AvroDeserializer, AvroSerializer
 from confluent_kafka.serialization import (
-    SerializationContext,
     MessageField,
-    StringSerializer,
+    SerializationContext,
     StringDeserializer,
+    StringSerializer,
 )
 
 from src.config import SchemaRegistrySettings
