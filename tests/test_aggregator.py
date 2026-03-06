@@ -7,8 +7,9 @@ import pytest
 # Only run if pyspark is available
 pyspark = pytest.importorskip("pyspark")
 
-from pyspark.sql import SparkSession
-from src.transformation.ohlcv_aggregator import aggregate_hourly, aggregate_daily
+from pyspark.sql import SparkSession  # noqa: E402
+
+from src.transformation.ohlcv_aggregator import aggregate_daily, aggregate_hourly  # noqa: E402
 
 
 @pytest.fixture(scope="module")

@@ -2,7 +2,13 @@
 
 from __future__ import annotations
 
-from src.config import Settings, KafkaSettings, PostgresSettings, DataSourceSettings, get_settings
+from src.config import (
+    DataSourceSettings,
+    KafkaSettings,
+    PostgresSettings,
+    Settings,
+    get_settings,
+)
 
 
 class TestKafkaSettings:

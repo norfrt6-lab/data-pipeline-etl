@@ -5,8 +5,6 @@ from __future__ import annotations
 import json
 from unittest.mock import MagicMock, patch
 
-import pytest
-
 from src.ingestion.producer import fetch_ohlcv, publish_candles
 
 

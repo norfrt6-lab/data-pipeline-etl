@@ -7,8 +7,6 @@ ohlcv_hourly and ohlcv_daily warehouse tables.
 
 from __future__ import annotations
 
-import sys
-
 from pyspark.sql import SparkSession, DataFrame
 from pyspark.sql import functions as F
 from pyspark.sql.window import Window

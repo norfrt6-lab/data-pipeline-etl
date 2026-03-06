@@ -14,7 +14,7 @@ from datetime import datetime, timezone
 import structlog
 from confluent_kafka import KafkaError, Producer
 
-from src.config import KafkaSettings, DataSourceSettings, get_settings
+from src.config import DataSourceSettings, KafkaSettings, Settings, get_settings
 from src.ingestion.serialization import create_serializer
 
 logger = structlog.get_logger(__name__)
