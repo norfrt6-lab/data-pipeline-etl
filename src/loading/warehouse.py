@@ -6,9 +6,9 @@ and lightweight SQL operations outside of Spark.
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from contextlib import contextmanager
 from datetime import datetime, timezone
-from collections.abc import Generator
 
 import psycopg2
 import psycopg2.extras
