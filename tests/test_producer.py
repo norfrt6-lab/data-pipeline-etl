@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from unittest.mock import MagicMock, patch
 
-from src.ingestion.producer import fetch_ohlcv, publish_candles
+from src.ingestion.producer import _delivery_callback, fetch_ohlcv, publish_candles
 
 
 class TestFetchOhlcv:
@@ -46,6 +46,17 @@ class TestFetchOhlcv:
         candles = fetch_ohlcv("binance", "BTC/USDT", "1m")
         assert candles == []
 
+    @patch("src.ingestion.producer.ccxt")
+    def test_fetch_passes_since_parameter(self, mock_ccxt):
+        mock_exchange = MagicMock()
+        mock_exchange.fetch_ohlcv.return_value = []
+        mock_ccxt.binance.return_value = mock_exchange
+
+        fetch_ohlcv("binance", "BTC/USDT", "1m", since=1704067200000)
+        mock_exchange.fetch_ohlcv.assert_called_once_with(
+            "BTC/USDT", "1m", since=1704067200000, limit=100
+        )
+
 
 class TestPublishCandles:
     def test_publish_returns_count(self, sample_candles):
@@ -79,3 +90,35 @@ class TestPublishCandles:
         count = publish_candles(mock_producer, "test-topic", [])
         assert count == 0
         mock_producer.produce.assert_not_called()
+
+    def test_publish_with_serializer(self, sample_candle):
+        mock_producer = MagicMock()
+        mock_serializer = MagicMock()
+        mock_serializer.serialize_key.return_value = b"key-bytes"
+        mock_serializer.serialize_value.return_value = b"value-bytes"
+
+        count = publish_candles(
+            mock_producer, "test-topic", [sample_candle], serializer=mock_serializer
+        )
+        assert count == 1
+        mock_serializer.serialize_key.assert_called_once()
+        mock_serializer.serialize_value.assert_called_once_with(sample_candle, "test-topic")
+        call_kwargs = mock_producer.produce.call_args[1]
+        assert call_kwargs["key"] == b"key-bytes"
+        assert call_kwargs["value"] == b"value-bytes"
+
+
+class TestDeliveryCallback:
+    def test_success_no_error(self):
+        mock_msg = MagicMock()
+        mock_msg.topic.return_value = "test-topic"
+        mock_msg.partition.return_value = 0
+        # Should not raise
+        _delivery_callback(None, mock_msg)
+
+    def test_error_logged(self):
+        mock_msg = MagicMock()
+        mock_err = MagicMock()
+        mock_err.__str__ = MagicMock(return_value="delivery failed")
+        # Should not raise
+        _delivery_callback(mock_err, mock_msg)
