@@ -11,6 +11,7 @@ import signal
 import time
 from datetime import datetime, timezone
 
+import ccxt
 import structlog
 from confluent_kafka import KafkaError, Producer
 
@@ -67,8 +68,6 @@ def fetch_ohlcv(
 
     Returns a list of dicts with keys: timestamp_ms, open, high, low, close, volume.
     """
-    import ccxt
-
     exchange_class = getattr(ccxt, exchange_id)
     exchange = exchange_class({"enableRateLimit": True})
 
