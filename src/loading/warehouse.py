@@ -54,7 +54,9 @@ def record_pipeline_run(
     """
     with conn.cursor() as cur:
         cur.execute(sql, (dag_id, run_id, status))
-        row_id = cur.fetchone()[0]
+        row = cur.fetchone()
+        assert row is not None
+        row_id: int = row[0]
     conn.commit()
     return row_id
 
@@ -98,7 +100,10 @@ def get_table_count(conn: psycopg2.extensions.connection, table: str) -> int:
 
     with conn.cursor() as cur:
         cur.execute(f"SELECT COUNT(*) FROM {table}")  # noqa: S608
-        return cur.fetchone()[0]
+        row = cur.fetchone()
+        assert row is not None
+        result: int = row[0]
+        return result
 
 
 def get_latest_timestamp(conn: psycopg2.extensions.connection, symbol: str) -> int | None:
@@ -106,5 +111,8 @@ def get_latest_timestamp(conn: psycopg2.extensions.connection, symbol: str) -> i
     sql = "SELECT MAX(timestamp_ms) FROM raw_ohlcv WHERE symbol = %s"
     with conn.cursor() as cur:
         cur.execute(sql, (symbol,))
-        result = cur.fetchone()[0]
+        row = cur.fetchone()
+        if row is None:
+            return None
+        result: int | None = row[0]
     return result

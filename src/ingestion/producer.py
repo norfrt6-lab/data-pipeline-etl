@@ -13,7 +13,7 @@ from datetime import datetime, timezone
 
 import ccxt
 import structlog
-from confluent_kafka import KafkaError, Producer
+from confluent_kafka import KafkaError, Message, Producer
 
 from src.config import KafkaSettings, Settings, get_settings
 from src.ingestion.serialization import create_serializer
@@ -49,7 +49,7 @@ def create_producer(kafka_cfg: KafkaSettings) -> Producer:
     )
 
 
-def _delivery_callback(err: KafkaError | None, msg: object) -> None:
+def _delivery_callback(err: KafkaError | None, msg: Message) -> None:
     """Log delivery success or failure."""
     if err is not None:
         logger.error("delivery_failed", error=str(err))

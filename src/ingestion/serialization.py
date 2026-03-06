@@ -79,11 +79,14 @@ class AvroOhlcvSerializer:
         logger.info("avro_serializer_initialized", registry_url=schema_registry_cfg.url)
 
     def serialize_key(self, key: str) -> bytes:
-        return self._key_serializer(key)
+        result = self._key_serializer(key)
+        assert result is not None
+        return result
 
     def serialize_value(self, candle: dict, topic: str) -> bytes:
         ctx = SerializationContext(topic, MessageField.VALUE)
-        return self._avro_serializer(candle, ctx)
+        result: bytes = self._avro_serializer(candle, ctx)
+        return result
 
 
 class AvroOhlcvDeserializer:
@@ -108,7 +111,8 @@ class AvroOhlcvDeserializer:
         if data is None:
             return None
         ctx = SerializationContext(topic, MessageField.VALUE)
-        return self._avro_deserializer(data, ctx)
+        result: dict | None = self._avro_deserializer(data, ctx)
+        return result
 
 
 class JsonFallbackSerializer:
@@ -133,7 +137,8 @@ class JsonFallbackDeserializer:
         if data is None:
             return None
         try:
-            return json.loads(data.decode("utf-8"))
+            result: dict = json.loads(data.decode("utf-8"))
+            return result
         except (json.JSONDecodeError, UnicodeDecodeError):
             return None
 
