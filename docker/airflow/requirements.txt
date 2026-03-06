@@ -17,3 +17,6 @@ pydantic-settings>=2.7.0
 
 # Logging
 structlog>=24.4.0
+
+# Airflow providers
+apache-airflow-providers-apache-spark>=4.7.0
