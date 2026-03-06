@@ -1,0 +1,29 @@
+version: 2
+
+sources:
+  - name: warehouse
+    tables:
+      - name: technical_indicators
+        description: "Technical indicators computed by PySpark jobs"
+
+models:
+  - name: fct_market_daily
+    description: "Daily market facts combining OHLCV data with technical indicators and derived signals"
+    columns:
+      - name: symbol
+        tests:
+          - not_null
+      - name: date
+        tests:
+          - not_null
+      - name: close
+        tests:
+          - not_null
+      - name: rsi_signal
+        tests:
+          - accepted_values:
+              values: ["oversold", "overbought", "neutral"]
+      - name: bb_position
+        tests:
+          - accepted_values:
+              values: ["above_upper", "below_lower", "within_bands"]
