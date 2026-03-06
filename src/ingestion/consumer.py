@@ -96,7 +96,7 @@ def insert_batch(
     return len(records)
 
 
-def parse_message(raw_value: bytes, deserializer=None, topic: str = "") -> dict | None:
+def parse_message(raw_value: bytes, deserializer: object = None, topic: str = "") -> dict | None:
     """Deserialize a Kafka message value. Returns None on parse failure."""
     try:
         if deserializer is not None:
@@ -114,7 +114,8 @@ def parse_message(raw_value: bytes, deserializer=None, topic: str = "") -> dict 
         if not required.issubset(data.keys()):
             logger.warning("missing_fields", keys=list(data.keys()))
             return None
-        return data
+        result: dict = data
+        return result
     except Exception as exc:
         logger.warning("parse_error", error=str(exc))
         return None
@@ -122,7 +123,7 @@ def parse_message(raw_value: bytes, deserializer=None, topic: str = "") -> dict 
 
 def send_to_dlq(dlq_producer: Producer, topic: str, raw_value: bytes, reason: str) -> None:
     """Send a failed message to the dead letter queue."""
-    headers = [("error_reason", reason.encode("utf-8"))]
+    headers: list[tuple[str, str | bytes | None]] = [("error_reason", reason.encode("utf-8"))]
     dlq_producer.produce(topic, value=raw_value, headers=headers)
     dlq_producer.poll(0)
 
@@ -160,14 +161,18 @@ def run(settings: Settings | None = None) -> None:
                     last_flush = time.monotonic()
                 continue
 
-            if msg.error():
-                if msg.error().code() == KafkaError._PARTITION_EOF:
+            err = msg.error()
+            if err:
+                if err.code() == KafkaError._PARTITION_EOF:
                     continue
-                raise KafkaException(msg.error())
+                raise KafkaException(err)
 
-            record = parse_message(msg.value(), deserializer, kafka_cfg.topic_raw_ohlcv)
+            raw = msg.value()
+            if raw is None:
+                continue
+            record = parse_message(raw, deserializer, kafka_cfg.topic_raw_ohlcv)
             if record is None:
-                send_to_dlq(dlq_producer, kafka_cfg.topic_dlq, msg.value(), "parse_error")
+                send_to_dlq(dlq_producer, kafka_cfg.topic_dlq, raw, "parse_error")
                 continue
 
             batch.append(record)

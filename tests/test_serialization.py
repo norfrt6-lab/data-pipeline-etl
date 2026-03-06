@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from unittest.mock import patch
 
 from src.config import SchemaRegistrySettings
 from src.ingestion.serialization import (
@@ -106,7 +107,11 @@ class TestCandleToDictHelper:
 
 
 class TestCreateSerializerFactory:
-    def test_falls_back_to_json_when_registry_unreachable(self):
+    @patch(
+        "src.ingestion.serialization.AvroOhlcvSerializer",
+        side_effect=Exception("connection refused"),
+    )
+    def test_falls_back_to_json_when_registry_unreachable(self, _mock):
         cfg = SchemaRegistrySettings(url="http://localhost:99999")
         s = create_serializer(cfg)
         assert isinstance(s, JsonFallbackSerializer)
@@ -118,7 +123,11 @@ class TestCreateSerializerFactory:
 
 
 class TestCreateDeserializerFactory:
-    def test_falls_back_to_json_when_registry_unreachable(self):
+    @patch(
+        "src.ingestion.serialization.AvroOhlcvDeserializer",
+        side_effect=Exception("connection refused"),
+    )
+    def test_falls_back_to_json_when_registry_unreachable(self, _mock):
         cfg = SchemaRegistrySettings(url="http://localhost:99999")
         d = create_deserializer(cfg)
         assert isinstance(d, JsonFallbackDeserializer)
