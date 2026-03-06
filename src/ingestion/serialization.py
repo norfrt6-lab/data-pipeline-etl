@@ -79,7 +79,7 @@ class AvroOhlcvSerializer:
         logger.info("avro_serializer_initialized", registry_url=schema_registry_cfg.url)
 
     def serialize_key(self, key: str) -> bytes:
-        result: bytes = self._key_serializer(key)
+        result: bytes | None = self._key_serializer(key)
         assert result is not None
         return result
 
@@ -105,7 +105,7 @@ class AvroOhlcvDeserializer:
     def deserialize_key(self, data: bytes) -> str | None:
         if data is None:
             return None
-        result: str = self._key_deserializer(data)
+        result: str | None = self._key_deserializer(data)
         return result
 
     def deserialize_value(self, data: bytes, topic: str) -> dict | None:
