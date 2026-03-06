@@ -1,0 +1,25 @@
+version: 2
+
+sources:
+  - name: raw
+    tables:
+      - name: raw_ohlcv
+        description: "Raw minute-level OHLCV candles ingested from Kafka"
+
+models:
+  - name: stg_raw_ohlcv
+    description: "Cleaned and validated raw OHLCV data with quality filters"
+    columns:
+      - name: id
+        tests:
+          - unique
+          - not_null
+      - name: symbol
+        tests:
+          - not_null
+      - name: timestamp_ms
+        tests:
+          - not_null
+      - name: volume
+        tests:
+          - not_null

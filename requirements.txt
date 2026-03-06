@@ -1,0 +1,25 @@
+# Kafka
+confluent-kafka>=2.6.0
+
+# Data
+ccxt>=4.4.0
+pandas>=2.2.0
+numpy>=1.26.0
+
+# Database
+psycopg2-binary>=2.9.0
+sqlalchemy>=2.0.0
+
+# Spark
+pyspark>=3.5.0
+
+# Monitoring
+prometheus-client>=0.21.0
+
+# Config
+python-dotenv>=1.0.0
+pydantic>=2.10.0
+pydantic-settings>=2.7.0
+
+# Logging
+structlog>=24.4.0
