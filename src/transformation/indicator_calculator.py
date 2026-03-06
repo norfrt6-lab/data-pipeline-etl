@@ -46,9 +46,7 @@ def compute_ema(df: DataFrame, column: str, period: int) -> DataFrame:
     window functions would give.
     """
     col_name = f"ema_{period}"
-    output_schema = StructType(
-        list(df.schema.fields) + [StructField(col_name, DoubleType(), True)]
-    )
+    output_schema = StructType(list(df.schema.fields) + [StructField(col_name, DoubleType(), True)])
 
     def _ema_fn(pdf: pd.DataFrame) -> pd.DataFrame:
         pdf = pdf.sort_values("date")
@@ -136,9 +134,7 @@ def compute_atr(df: DataFrame, period: int = 14) -> DataFrame:
 def compute_obv(df: DataFrame) -> DataFrame:
     """Compute On-Balance Volume (cumulative)."""
     w_prev = Window.partitionBy("symbol").orderBy("date")
-    w_cum = Window.partitionBy("symbol").orderBy("date").rowsBetween(
-        Window.unboundedPreceding, 0
-    )
+    w_cum = Window.partitionBy("symbol").orderBy("date").rowsBetween(Window.unboundedPreceding, 0)
 
     df = df.withColumn(
         "_vol_direction",
