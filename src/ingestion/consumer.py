@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import signal
 import time
+from typing import Protocol
 
 import psycopg2
 import psycopg2.extras
@@ -17,6 +18,11 @@ from confluent_kafka import Consumer, KafkaError, KafkaException, Producer
 
 from src.config import KafkaSettings, PostgresSettings, Settings, get_settings
 from src.ingestion.serialization import create_deserializer
+
+
+class _Deserializer(Protocol):
+    def deserialize_value(self, data: bytes, topic: str) -> dict | None: ...
+
 
 logger = structlog.get_logger(__name__)
 
@@ -96,7 +102,9 @@ def insert_batch(
     return len(records)
 
 
-def parse_message(raw_value: bytes, deserializer: object = None, topic: str = "") -> dict | None:
+def parse_message(
+    raw_value: bytes, deserializer: _Deserializer | None = None, topic: str = ""
+) -> dict | None:
     """Deserialize a Kafka message value. Returns None on parse failure."""
     try:
         if deserializer is not None:
