@@ -1,8 +1,8 @@
-FROM bitnami/spark:3.5
+FROM apache/spark:3.5.4
 
 USER root
 
 COPY requirements.txt /tmp/requirements.txt
 RUN pip install --no-cache-dir -r /tmp/requirements.txt
 
-USER 1001
+USER spark
