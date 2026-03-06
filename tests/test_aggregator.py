@@ -41,7 +41,18 @@ def raw_df(spark):
 class TestAggregateHourly:
     def test_output_has_expected_columns(self, raw_df):
         result = aggregate_hourly(raw_df)
-        expected_cols = {"symbol", "exchange", "hour_start", "open", "high", "low", "close", "volume", "trade_count", "vwap"}
+        expected_cols = {
+            "symbol",
+            "exchange",
+            "hour_start",
+            "open",
+            "high",
+            "low",
+            "close",
+            "volume",
+            "trade_count",
+            "vwap",
+        }
         assert expected_cols.issubset(set(result.columns))
 
     def test_groups_by_hour(self, raw_df):
@@ -75,5 +86,5 @@ class TestAggregateDaily:
     def test_open_is_first_close_is_last(self, raw_df):
         result = aggregate_daily(raw_df)
         row = result.collect()[0]
-        assert row["open"] == 42000.0   # First candle's open
+        assert row["open"] == 42000.0  # First candle's open
         assert row["close"] == 42250.0  # Last candle's close

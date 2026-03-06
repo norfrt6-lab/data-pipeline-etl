@@ -103,6 +103,7 @@ def parse_message(raw_value: bytes, deserializer=None, topic: str = "") -> dict 
             data = deserializer.deserialize_value(raw_value, topic)
         else:
             import json
+
             data = json.loads(raw_value.decode("utf-8"))
 
         if data is None:

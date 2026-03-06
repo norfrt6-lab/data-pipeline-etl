@@ -87,11 +87,13 @@ class TestKafkaProduceConsume:
         producer.flush(timeout=10)
 
         # Consume
-        consumer = Consumer({
-            "bootstrap.servers": bootstrap,
-            "group.id": "test-group",
-            "auto.offset.reset": "earliest",
-        })
+        consumer = Consumer(
+            {
+                "bootstrap.servers": bootstrap,
+                "group.id": "test-group",
+                "auto.offset.reset": "earliest",
+            }
+        )
         consumer.subscribe([topic])
 
         msg = None
@@ -186,11 +188,13 @@ class TestEndToEnd:
         producer.flush(timeout=10)
 
         # Consume and insert
-        consumer = Consumer({
-            "bootstrap.servers": bootstrap,
-            "group.id": "e2e-test-group",
-            "auto.offset.reset": "earliest",
-        })
+        consumer = Consumer(
+            {
+                "bootstrap.servers": bootstrap,
+                "group.id": "e2e-test-group",
+                "auto.offset.reset": "earliest",
+            }
+        )
         consumer.subscribe([topic])
 
         conn = psycopg2.connect(conn_url)
