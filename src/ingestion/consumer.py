@@ -92,7 +92,7 @@ def insert_batch(
     sql = """
         INSERT INTO raw_ohlcv (symbol, exchange, timestamp_ms, open, high, low, close, volume)
         VALUES (%(symbol)s, %(exchange)s, %(timestamp_ms)s, %(open)s, %(high)s, %(low)s, %(close)s, %(volume)s)
-        ON CONFLICT (symbol, exchange, timestamp_ms) DO NOTHING
+        ON CONFLICT (symbol, exchange, timestamp_ms, ingested_at) DO NOTHING
     """
 
     with conn.cursor() as cur:
