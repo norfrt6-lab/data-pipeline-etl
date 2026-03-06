@@ -6,8 +6,10 @@ then writes results to the technical_indicators table.
 
 from __future__ import annotations
 
+import pandas as pd
 from pyspark.sql import SparkSession, DataFrame
 from pyspark.sql import functions as F
+from pyspark.sql.types import DoubleType, StructField, StructType
 from pyspark.sql.window import Window
 
 from src.config import get_settings
@@ -37,16 +39,23 @@ def compute_sma(df: DataFrame, column: str, period: int) -> DataFrame:
 
 
 def compute_ema(df: DataFrame, column: str, period: int) -> DataFrame:
-    """Approximate EMA using exponentially-weighted moving average.
+    """Compute true Exponential Moving Average using applyInPandas.
 
-    PySpark doesn't have a native EMA window function, so we use the
-    SMA-based approximation (acceptable for portfolio demonstration).
-    For production, this would use a UDF or Pandas UDF.
+    Groups by symbol, sorts by date, and applies pandas ewm() for an
+    accurate EMA calculation — unlike the SMA approximation that Spark
+    window functions would give.
     """
-    # Use SMA as EMA approximation (standard for Spark batch processing)
-    w = Window.partitionBy("symbol").orderBy("date").rowsBetween(-(period - 1), 0)
     col_name = f"ema_{period}"
-    return df.withColumn(col_name, F.avg(column).over(w))
+    output_schema = StructType(
+        list(df.schema.fields) + [StructField(col_name, DoubleType(), True)]
+    )
+
+    def _ema_fn(pdf: pd.DataFrame) -> pd.DataFrame:
+        pdf = pdf.sort_values("date")
+        pdf[col_name] = pdf[column].ewm(span=period, adjust=False).mean()
+        return pdf
+
+    return df.groupBy("symbol").applyInPandas(_ema_fn, output_schema)
 
 
 def compute_rsi(df: DataFrame, period: int = 14) -> DataFrame:

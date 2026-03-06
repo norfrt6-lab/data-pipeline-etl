@@ -30,10 +30,22 @@ services:
     volumes:
       - kafka-data:/var/lib/kafka/data
 
+  schema-registry:
+    image: confluentinc/cp-schema-registry:7.7.1
+    depends_on:
+      - kafka
+    ports:
+      - "8082:8081"
+    environment:
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: kafka:29092
+      SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
+
   kafka-init:
     image: confluentinc/cp-kafka:7.7.1
     depends_on:
       - kafka
+      - schema-registry
     entrypoint: ["/bin/sh", "-c"]
     command: |
       "
@@ -171,9 +183,58 @@ services:
         airflow db migrate
         airflow users create --role Admin --username admin --password admin --email admin@local --firstname Admin --lastname User || true
 
+  # ─── Monitoring ────────────────────────────────────────
+  prometheus:
+    image: prom/prometheus:v2.51.0
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.retention.time=30d"
+
+  grafana:
+    image: grafana/grafana:10.4.1
+    depends_on:
+      - prometheus
+      - postgres
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - ./docker/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./docker/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+
+  kafka-exporter:
+    image: danielqsj/kafka-exporter:v1.7.0
+    depends_on:
+      - kafka
+    ports:
+      - "9308:9308"
+    command:
+      - "--kafka.server=kafka:29092"
+
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:v0.15.0
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "9187:9187"
+    environment:
+      DATA_SOURCE_NAME: "postgresql://pipeline:pipeline_secret@postgres:5432/crypto_warehouse?sslmode=disable"
+
 volumes:
   zookeeper-data:
   kafka-data:
   postgres-data:
   redis-data:
   airflow-logs:
+  prometheus-data:
+  grafana-data:

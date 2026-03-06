@@ -49,11 +49,18 @@ class SparkSettings(BaseSettings):
     model_config = {"env_prefix": "SPARK_"}
 
 
+class SchemaRegistrySettings(BaseSettings):
+    url: str = "http://localhost:8082"
+
+    model_config = {"env_prefix": "SCHEMA_REGISTRY_"}
+
+
 class Settings(BaseSettings):
     kafka: KafkaSettings = KafkaSettings()
     postgres: PostgresSettings = PostgresSettings()
     data_source: DataSourceSettings = DataSourceSettings()
     spark: SparkSettings = SparkSettings()
+    schema_registry: SchemaRegistrySettings = SchemaRegistrySettings()
 
 
 def get_settings() -> Settings:

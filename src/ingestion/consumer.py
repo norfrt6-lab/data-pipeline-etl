@@ -7,7 +7,6 @@ to a dead letter queue topic.
 
 from __future__ import annotations
 
-import json
 import signal
 import time
 from datetime import datetime, timezone
@@ -18,6 +17,7 @@ import structlog
 from confluent_kafka import Consumer, KafkaError, KafkaException, Producer
 
 from src.config import KafkaSettings, PostgresSettings, get_settings
+from src.ingestion.serialization import create_deserializer
 
 logger = structlog.get_logger(__name__)
 
@@ -97,17 +97,25 @@ def insert_batch(
     return len(records)
 
 
-def parse_message(raw_value: bytes) -> dict | None:
+def parse_message(raw_value: bytes, deserializer=None, topic: str = "") -> dict | None:
     """Deserialize a Kafka message value. Returns None on parse failure."""
     try:
-        data = json.loads(raw_value.decode("utf-8"))
+        if deserializer is not None:
+            data = deserializer.deserialize_value(raw_value, topic)
+        else:
+            import json
+            data = json.loads(raw_value.decode("utf-8"))
+
+        if data is None:
+            return None
+
         # Validate required fields
         required = {"symbol", "exchange", "timestamp_ms", "open", "high", "low", "close", "volume"}
         if not required.issubset(data.keys()):
             logger.warning("missing_fields", keys=list(data.keys()))
             return None
         return data
-    except (json.JSONDecodeError, UnicodeDecodeError) as exc:
+    except Exception as exc:
         logger.warning("parse_error", error=str(exc))
         return None
 
@@ -130,6 +138,7 @@ def run(settings: Settings | None = None) -> None:
     consumer = create_consumer(kafka_cfg)
     dlq_producer = create_dlq_producer(kafka_cfg)
     conn = connect_postgres(pg_cfg)
+    deserializer = create_deserializer(settings.schema_registry)
 
     consumer.subscribe([kafka_cfg.topic_raw_ohlcv])
     logger.info("consumer_started", topic=kafka_cfg.topic_raw_ohlcv, group=kafka_cfg.consumer_group)
@@ -156,7 +165,7 @@ def run(settings: Settings | None = None) -> None:
                     continue
                 raise KafkaException(msg.error())
 
-            record = parse_message(msg.value())
+            record = parse_message(msg.value(), deserializer, kafka_cfg.topic_raw_ohlcv)
             if record is None:
                 send_to_dlq(dlq_producer, kafka_cfg.topic_dlq, msg.value(), "parse_error")
                 continue

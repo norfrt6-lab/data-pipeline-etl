@@ -7,9 +7,7 @@ continuous loop with configurable fetch intervals.
 
 from __future__ import annotations
 
-import json
 import signal
-import sys
 import time
 from datetime import datetime, timezone
 
@@ -17,6 +15,7 @@ import structlog
 from confluent_kafka import KafkaError, Producer
 
 from src.config import KafkaSettings, DataSourceSettings, get_settings
+from src.ingestion.serialization import create_serializer
 
 logger = structlog.get_logger(__name__)
 
@@ -99,16 +98,23 @@ def publish_candles(
     producer: Producer,
     topic: str,
     candles: list[dict],
+    serializer=None,
 ) -> int:
     """Serialize and publish candles to Kafka. Returns count of produced messages."""
     count = 0
     for candle in candles:
         key = f"{candle['symbol']}:{candle['timestamp_ms']}"
-        value = json.dumps(candle)
+        if serializer is not None:
+            key_bytes = serializer.serialize_key(key)
+            value_bytes = serializer.serialize_value(candle, topic)
+        else:
+            import json
+            key_bytes = key.encode("utf-8")
+            value_bytes = json.dumps(candle).encode("utf-8")
         producer.produce(
             topic,
-            key=key.encode("utf-8"),
-            value=value.encode("utf-8"),
+            key=key_bytes,
+            value=value_bytes,
             callback=_delivery_callback,
         )
         count += 1
@@ -126,6 +132,7 @@ def run(settings: Settings | None = None) -> None:
     data_cfg = settings.data_source
 
     producer = create_producer(kafka_cfg)
+    serializer = create_serializer(settings.schema_registry)
     last_timestamp: int | None = None
 
     logger.info(
@@ -151,7 +158,7 @@ def run(settings: Settings | None = None) -> None:
                     candles = [c for c in candles if c["timestamp_ms"] > last_timestamp]
 
                 if candles:
-                    count = publish_candles(producer, kafka_cfg.topic_raw_ohlcv, candles)
+                    count = publish_candles(producer, kafka_cfg.topic_raw_ohlcv, candles, serializer)
                     last_timestamp = max(c["timestamp_ms"] for c in candles)
                     logger.info(
                         "batch_published",
