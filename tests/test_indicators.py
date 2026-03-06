@@ -6,14 +6,15 @@ import pytest
 
 pyspark = pytest.importorskip("pyspark")
 
-from pyspark.sql import SparkSession
-from src.transformation.indicator_calculator import (
-    compute_sma,
-    compute_rsi,
-    compute_bollinger_bands,
-    compute_atr,
-    compute_obv,
+from pyspark.sql import SparkSession  # noqa: E402
+
+from src.transformation.indicator_calculator import (  # noqa: E402
     compute_all_indicators,
+    compute_atr,
+    compute_bollinger_bands,
+    compute_obv,
+    compute_rsi,
+    compute_sma,
 )
 
 
