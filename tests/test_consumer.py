@@ -101,7 +101,8 @@ class TestInsertBatch:
         result = insert_batch(MagicMock(), [])
         assert result == 0
 
-    def test_inserts_records(self):
+    @patch("src.ingestion.consumer.psycopg2.extras.execute_batch")
+    def test_inserts_records(self, mock_exec_batch):
         mock_conn = MagicMock()
         records = [
             {
@@ -118,8 +119,10 @@ class TestInsertBatch:
         result = insert_batch(mock_conn, records)
         assert result == 1
         mock_conn.commit.assert_called_once()
+        mock_exec_batch.assert_called_once()
 
-    def test_inserts_multiple_records(self):
+    @patch("src.ingestion.consumer.psycopg2.extras.execute_batch")
+    def test_inserts_multiple_records(self, mock_exec_batch):
         mock_conn = MagicMock()
         records = [
             {
